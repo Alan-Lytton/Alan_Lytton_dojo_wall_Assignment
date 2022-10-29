@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename ='css/style.css')}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+    <title>Dojo Wall</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+        <div class="container-fluid justify-content-evenly">
+            <a class="navbar-brand" href="/wall">Coding Dojo Wall</a>
+            <div class="navbar-nav align-items-center">
+                <p class="nav-link active me-5" aria-current="page">Welcome {{ session['user_id'][0]['first_name'] }}</p>
+                <a class="nav-link btn btn-primary text-light" href="/destroy_session">Log Out</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1 class="mb-3">Whats on your mind? Create a new post!</h1>
+        {% with messages = get_flashed_messages(category_filter=['pos']) %}
+            {% if messages %}
+                <ul>
+                {% for message in messages %}
+                    <li class="text-danger">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form class="form-floating mt-4" action="/create_post" method="POST">
+            <textarea class="form-control" name="new_post" style="height: 100px;"></textarea>
+            <input type="hidden" name="user_id" value="{{ session['user_id'][0]['id'] }}">
+            <span class="d-flex justify-content-end"><input class="btn btn-primary mt-4" type="submit"
+                    value="Create Post"></span>
+        </form>
+    </div>
+    <div class="container flex-column d-sm-flex d-md-block d-xxl-flex mt-4">
+        <h2 class="mb-3">Community Posts: </h2>
+        <div class="overflow-auto p-3 mb-3 me-sm-3 bg-light p-4 d-flex flex-column" style="max-height: 650px;">
+            {% for post in posts %}
+                <div class="d-flex flex-column border border-1 border-dark p-3 mb-2">
+                    <h4>{{ post.user.first_name }} {{ post.user.last_name }} {{ post.created_at.strftime('%m/%d/%Y') }}:</h4>
+                    <p>{{ post.content }}</p>
+                    <h4>Comments:</h4>
+                    {% for comment in post.comments %}
+                        <div class="d-flex flex-column align-items-center">
+                            <h5>{{comment.user.first_name}} {{ comment.user.last_name }} {{ comment.created_at.strftime('%m/%d/%Y') }}:</h5>
+                            <p>{{comment.content}}</p>
+                        </div>
+                    {% endfor %}
+                    {% with messages = get_flashed_messages(with_categories = True) %}
+                        {% if messages %}
+                            <ul>
+                                {% for category,message in messages %}
+                                    {% if category.isnumeric() and category|int == post.id %}
+                                    <li class="text-danger">{{ message }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                    <form class="form-floating mt-4" action="/add/comment " method="post">
+                        <span class="d-flex justify-content-center"><textarea class="form-control" name="new_comment" style="width: 550px; height: 75px;"></textarea></span>
+                        <input type="hidden" name="user_id" value="{{ session['user_id'][0]['id'] }}">
+                        <input type="hidden" name="post_id" value="{{ post.id }}">
+                        <span class="d-flex justify-content-end"><input class="btn btn-primary mt-4" type="submit"
+                            value="Add Comment"></span>
+                    </form>
+                    {% if post.user_id == session['user_id'][0]['id'] %}
+                    <a class="btn btn-danger align-self-end mt-3" href="/delete/{{post.id}}">DELETE</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+
+</html>
